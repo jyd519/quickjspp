@@ -405,11 +405,12 @@ struct js_traits<std::variant<Ts...>>
                 return std::is_integral_v<T> || std::is_floating_point_v<T>;
             case JS_TAG_BOOL:
                 return is_boolean<T>::value || std::is_integral_v<T> || std::is_floating_point_v<T>;
-
+#ifdef CONFIG_BIGNUM
             case JS_TAG_BIG_DECIMAL:
                 [[fallthrough]];
             case JS_TAG_BIG_FLOAT:
                 [[fallthrough]];
+#endif
             case JS_TAG_FLOAT64:
             default: // >JS_TAG_FLOAT64 (JS_NAN_BOXING)
                 return is_double<T>::value || std::is_floating_point_v<T>;
@@ -474,11 +475,12 @@ struct js_traits<std::variant<Ts...>>
             case JS_TAG_EXCEPTION:
                 break;
 
+#ifdef CONFIG_BIGNUM
             case JS_TAG_BIG_DECIMAL:
                 [[fallthrough]];
             case JS_TAG_BIG_FLOAT:
                 [[fallthrough]];
-
+#endif
             case JS_TAG_FLOAT64:
                 [[fallthrough]];
             default: // more than JS_TAG_FLOAT64 (nan boxing)
@@ -1005,7 +1007,7 @@ struct js_traits<T *, std::enable_if_t<std::is_class_v<T>>>
     {
         if (ptr == nullptr) {
             return JS_NULL;
-        }   
+        }
         if(js_traits<std::shared_ptr<T>>::QJSClassId == 0) // not registered
         {
 #if defined(__cpp_rtti)
@@ -1469,7 +1471,7 @@ public:
         if(!rt)
             throw std::runtime_error{"qjs: Cannot create runtime"};
 
-        JS_SetHostUnhandledPromiseRejectionTracker(rt, promise_unhandled_rejection_tracker, NULL);
+        JS_SetHostPromiseRejectionTracker(rt, promise_unhandled_rejection_tracker, NULL);
         JS_SetModuleLoaderFunc(rt, nullptr, module_loader, nullptr);
     }
 
